@@ -5,11 +5,26 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.10", "3.12"]
+        python: ["3.9", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
       - run: pip install pytest
-      - run: python -m pytest -q || [ $? -eq 5 ]
+      - run: python -m pytest -q
+  install:
+    # a clean runner with no checkout: install from the git URL, as the README says
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install pipx
+      - run: python -m pipx install "git+https://github.com/${{ github.repository }}@${{ github.sha }}"
+      - run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          pacekeeper --version
+          export PACEKEEPER_STATE_DIR="$RUNNER_TEMP/pk"
+          echo '{"rate_limits":{"five_hour":{"used_percentage":12,"resets_at":4102444800}}}' | pacekeeper statusline
+          pacekeeper usage
