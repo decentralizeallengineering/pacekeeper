@@ -1,5 +1,7 @@
 # pacekeeper
 
+[![tests](https://github.com/decentralizeallengineering/pacekeeper/actions/workflows/tests.yml/badge.svg)](https://github.com/decentralizeallengineering/pacekeeper/actions/workflows/tests.yml) ![license](https://img.shields.io/badge/license-Apache--2.0-blue)
+
 Usage and pacing tools for Claude Code, in one stdlib-only Python CLI: `pacekeeper <cmd>`.
 
 ## Why
