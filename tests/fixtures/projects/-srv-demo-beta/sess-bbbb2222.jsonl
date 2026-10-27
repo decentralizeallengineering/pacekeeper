@@ -1,0 +1,2 @@
+{"type": "user", "timestamp": "2026-01-01T12:20:00Z", "cwd": "/srv/demo/beta", "message": {"role": "user", "content": "Hello from ann@example.invalid"}}
+{"type": "assistant", "timestamp": "2026-01-01T12:20:05Z", "cwd": "/srv/demo/beta", "requestId": "req-m5", "message": {"id": "m5", "model": "model-a", "usage": {"input_tokens": 100, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0, "output_tokens": 10}}}
