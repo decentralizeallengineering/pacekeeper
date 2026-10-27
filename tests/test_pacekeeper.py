@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import unittest.mock
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -104,6 +105,48 @@ class CliTests(unittest.TestCase):
             stale = subprocess.run([sys.executable, "-m", "pacekeeper", "usage"], cwd=ROOT, timeout=30, capture_output=True,
                                    text=True, env=dict(later, PACEKEEPER_NOW=str(NOW + 99999)))
             self.assertEqual(stale.returncode, 2)
+
+
+CAPTURED = HERE / "fixtures" / "claude-code-2.1.311"
+
+
+class CapturedPayloadTests(unittest.TestCase):
+    """The scrubbed payloads of a real Claude Code 2.1.311 run, read by the same code paths."""
+
+    def load(self, name):
+        return json.loads((CAPTURED / name).read_text(encoding="utf-8"))
+
+    def test_status_line_payloads(self):
+        with tempfile.TemporaryDirectory() as d:
+            snap = Path(d) / "snap.json"
+            self.assertFalse(meters.write_snapshot(self.load("statusline-before-first-reply.json"), 1.0, snap))
+            self.assertTrue(meters.write_snapshot(self.load("statusline.json"), 1.0, snap))
+            got = meters.read_snapshot(snap)
+            self.assertEqual((got["5h"].used, got["5h"].resets_at), (9.0, 1793083200.0))
+            self.assertEqual((got["7d"].used, got["7d"].resets_at), (71.0, 1793217600.0))
+
+    def test_hook_payloads_keep_the_event_name(self):
+        from pacekeeper import hook
+        payload = self.load("statusline.json")
+        resets = payload["rate_limits"]["five_hour"]["resets_at"]
+        now = resets - 2 * 3600
+        with tempfile.TemporaryDirectory() as d, unittest.mock.patch.dict(os.environ, {"PACEKEEPER_STATE_DIR": d}):
+            meters.write_snapshot(payload, now)
+            prompt = (CAPTURED / "hook-UserPromptSubmit.json").read_text(encoding="utf-8")
+            self.assertIsNone(hook.run(prompt, now))  # 9% used: no note
+            payload["rate_limits"]["five_hour"]["used_percentage"] = 83
+            meters.write_snapshot(payload, now)
+            out = json.loads(hook.run((CAPTURED / "hook-PostToolUse.json").read_text(encoding="utf-8"), now))
+            self.assertEqual(out["hookSpecificOutput"]["hookEventName"], "PostToolUse")
+            self.assertIn("83%", out["hookSpecificOutput"]["additionalContext"])
+
+    def test_transcript_streamed_calls_count_once(self):
+        with tempfile.TemporaryDirectory() as d:
+            proj = Path(d) / "-home-ann-demo"
+            proj.mkdir()
+            (proj / "s.jsonl").write_bytes((CAPTURED / "transcript.jsonl").read_bytes())
+            calls = spend.collect(Path(d), 0)
+            self.assertEqual(len(calls), 3)  # 5 assistant lines, 3 distinct message and request ids
 
 
 if __name__ == "__main__":
