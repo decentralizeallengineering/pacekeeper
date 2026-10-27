@@ -1,0 +1,74 @@
+{
+  "session_id": "11111111-2222-4333-8444-555555555555",
+  "transcript_path": "/home/ann/.claude/projects/-home-ann-demo/11111111-2222-4333-8444-555555555555.jsonl",
+  "cwd": "/home/ann/demo",
+  "scratchpad_dir": "/tmp/claude/-home-ann-demo/11111111-2222-4333-8444-555555555555/scratchpad",
+  "prompt_id": "00000000-0000-4000-8000-000000000001",
+  "effort": {
+    "level": "medium"
+  },
+  "model": {
+    "id": "model-a",
+    "display_name": "Model A"
+  },
+  "workspace": {
+    "current_dir": "/home/ann/demo",
+    "project_dir": "/home/ann/demo",
+    "added_dirs": []
+  },
+  "version": "2.1.311",
+  "output_style": {
+    "name": "default"
+  },
+  "cost": {
+    "total_cost_usd": 0.17088799999999998,
+    "total_duration_ms": 9055,
+    "total_api_duration_ms": 2335,
+    "total_lines_added": 0,
+    "total_lines_removed": 0
+  },
+  "context_window": {
+    "total_input_tokens": 42713,
+    "total_output_tokens": 4,
+    "context_window_size": 1000000,
+    "current_usage": {
+      "input_tokens": 2,
+      "output_tokens": 4,
+      "cache_creation_input_tokens": 42711,
+      "cache_read_input_tokens": 0
+    },
+    "used_percentage": 4,
+    "remaining_percentage": 96
+  },
+  "exceeds_200k_tokens": false,
+  "prompt_cache": {
+    "warm": true,
+    "caching_observed": true,
+    "ttl": "1h",
+    "expires_at": 1793076335,
+    "requests": 1,
+    "misses": 0,
+    "expected_rebuilds": 0,
+    "hit_ratio": 0,
+    "cache_write_tokens": 42711,
+    "miss_recache_tokens": 0,
+    "last_miss_at": null,
+    "last_miss_cause": null,
+    "miss_causes": {},
+    "recache_tokens_if_cold": 42713
+  },
+  "fast_mode": false,
+  "thinking": {
+    "enabled": true
+  },
+  "rate_limits": {
+    "five_hour": {
+      "used_percentage": 9,
+      "resets_at": 1793083200
+    },
+    "seven_day": {
+      "used_percentage": 71,
+      "resets_at": 1793217600
+    }
+  }
+}
