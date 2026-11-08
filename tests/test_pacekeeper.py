@@ -80,6 +80,16 @@ class CliTests(unittest.TestCase):
         return subprocess.run([sys.executable, "-m", "pacekeeper", *args], input=stdin, capture_output=True,
                               text=True, cwd=ROOT, env=env, timeout=30)
 
+    def test_statusline_full_line(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = snapshot(12, 40, NOW)
+            p["model"] = {"display_name": "Opus"}
+            p["context_window"] = {"used_percentage": 41.6}
+            r = self.run_cli(d, "statusline", "--full", stdin=json.dumps(p))
+            self.assertEqual(r.stdout.strip(), "Opus | ctx 42% | 5h 12% | 7d 40%")
+            r = self.run_cli(d, "statusline", "--full", stdin=json.dumps(snapshot(1, 2, NOW)))
+            self.assertEqual(r.stdout.strip(), "? | ctx ? | 5h 1% | 7d 2%")
+
     def test_statusline_snapshot_usage_hook_and_resets(self):
         with tempfile.TemporaryDirectory() as d:
             self.assertEqual(self.run_cli(d, "--help").returncode, 0)

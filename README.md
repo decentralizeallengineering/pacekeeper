@@ -16,7 +16,7 @@ Python 3.9 or newer, no dependencies.
 
 ## Configure
 
-1. Save the real meters. Set the Claude Code status line command to `pacekeeper statusline`. It reads the status line JSON on stdin, writes the `rate_limits` to a snapshot file, and prints `5h 12%  7d 40%`. To keep an existing status line, run `pacekeeper statusline --quiet` on the same stdin first.
+1. Save the real meters. Set the Claude Code status line command to `pacekeeper statusline`. It reads the status line JSON on stdin, writes the `rate_limits` to a snapshot file, and prints `5h 12%  7d 40%` (`--full` prints `Opus | ctx 42% | 5h 12% | 7d 40%` instead). To keep an existing status line, run `pacekeeper statusline --quiet` on the same stdin first.
 2. Optional wind-down note: add `pacekeeper hook` as a `UserPromptSubmit` and `PostToolUse` hook command. Past a threshold it injects a one-line note into the session. It never blocks and exits 0.
 
 Environment variables (all optional):

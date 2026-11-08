@@ -28,8 +28,25 @@ def cmd_statusline(a) -> int:
     saved = mt.write_snapshot(payload if isinstance(payload, dict) else {}, _now())
     if not a.quiet:
         m = mt.parse_snapshot({"rate_limits": (payload or {}).get("rate_limits"), "captured_at": 1}) if saved else {}
-        print("  ".join(f"{n} {v.used:.0f}%" for n, v in m.items()) or "pacekeeper: no rate_limits yet")
+        meters = "  ".join(f"{n} {v.used:.0f}%" for n, v in m.items())
+        if a.full and isinstance(payload, dict):
+            print(_full_line(payload, m))
+        else:
+            print(meters or "pacekeeper: no rate_limits yet")
     return 0
+
+
+def _full_line(payload: dict, meters: dict) -> str:
+    """`Model | ctx 42% | 5h 12% | 7d 40%`; a missing field prints `?` (model, ctx) or is left out (meters)."""
+    def pct(x):
+        try:
+            return f"{round(float(x))}%"
+        except (TypeError, ValueError):
+            return "?"
+    parts = [(payload.get("model") or {}).get("display_name") or "?",
+             "ctx " + pct((payload.get("context_window") or {}).get("used_percentage"))]
+    parts += [f"{n} {v.used:.0f}%" for n, v in meters.items()]
+    return " | ".join(parts)
 
 
 def _read(a, now):
@@ -197,6 +214,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("statusline", help="status line command: save rate_limits from stdin")
     s.add_argument("--quiet", action="store_true", help="print nothing")
+    s.add_argument("--full", action="store_true", help="print `model | ctx N% | 5h N% | 7d N%` instead of the meters only")
     s.set_defaults(fn=cmd_statusline)
 
     s = sub.add_parser("usage", help="real 5h and 7d meters, reset times and pace; exit 2 if stale, 1 if missing")
