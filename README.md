@@ -45,6 +45,8 @@ Hook config, every key optional, with the defaults:
 | `statusline` | status line command: save `rate_limits` from stdin |
 | `usage [--json]` | 5h and 7d percent, reset times, pace. Exit 1 if no reading, 2 if stale |
 | `pace [--json]` | per window: burn %/h, target %/h, verdict, when the window runs out |
+| `line [--json]` | 7d percent against the linear weekly line: delta, burn, hours to cross. Exit 1 if no reading, 2 if stale |
+| `govern` | PreToolUse hook: deny opus or sonnet agents (and Workflow) while over the line |
 | `budget [--used P --hours-left H --target T --cost-per-turn C]` | allowed %/h and turns left to land on T at the reset; missing values come from the meter and, for the cost per turn, from transcripts |
 | `resets [--table] [--note TEXT]` | track window rollovers and peak percent in a log |
 | `cost [hours] [--by project\|role\|session\|model]` | weighted token spend from transcripts |
@@ -66,6 +68,27 @@ Spend weight is `input + 1.25 * cache write + 0.1 * cache read + 5 * output` tok
 ## Data sources
 
 Meters come only from the status line JSON that Claude Code passes to the `statusline` command, and spend comes only from your local transcript files. pacekeeper makes no network calls and reads no login credentials.
+
+## 30 seconds: the weekly line and the govern gate
+
+Set the reset of your weekly window once, in `$XDG_STATE_HOME/pacekeeper/config.json` (or `PACEKEEPER_CONFIG`):
+
+    {"reset": "Wed 12:59 America/Los_Angeles", "margin": 2}
+
+`line` reads the 7d percent from the saved status line snapshot and shows how far it runs ahead of an even burn to the reset:
+
+    $ pacekeeper line
+    7d 40.0% used, linear 28.0%, delta +12.0 pts (OVER the line, margin 2)
+    burn 1.00 %/h (history over the last 10.0 h), line rate 0.59 %/h
+    already over the line
+    reset Wed 12:59 America/Los_Angeles: window 11-11 20:59 to 11-18 20:59; reading is 0s old
+
+`govern` is a PreToolUse hook. Wire it with matcher `Agent|Task|Workflow` and command `pacekeeper govern`. While the delta is over the margin it denies opus and sonnet agents and all Workflow runs. It allows everything else, and it fails open with a stderr note when the snapshot is missing or stale.
+
+    $ echo '{"tool_name":"Agent","tool_input":{"subagent_type":"opus-builder"}}' | pacekeeper govern
+    {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "pace +12.0 pts over linear line: use haiku or wait"}}
+
+Each deny is appended to `govern-fires.jsonl` in the state directory.
 
 ## Tests
 

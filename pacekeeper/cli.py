@@ -8,7 +8,9 @@ import sys
 import time
 
 from . import __version__, paths
+from . import govern as gv
 from . import hook as hk
+from . import line as ln
 from . import meters as mt
 from . import pace as pc
 from . import resets as rs
@@ -78,6 +80,28 @@ def cmd_usage(a) -> int:
         print(f"STALE: reading is {int(age)}s old (max {mt.max_age():.0f}s). The status line is not refreshing, "
               "so the number is frozen. Treat the budget as unknown.", file=sys.stderr)
         return 2
+    return 0
+
+
+def cmd_line(a) -> int:
+    """7d used against the linear line for the configured reset. 1 if no reading or no reset, 2 if stale."""
+    try:
+        st = ln.status(_now())
+    except ValueError as e:
+        print(f"pacekeeper line: {e}", file=sys.stderr)
+        return 1
+    if st is None:
+        print("pacekeeper line: no 7d snapshot yet; the next status line refresh writes one", file=sys.stderr)
+        return 1
+    print(json.dumps(st, indent=2) if a.json else "\n".join(ln.render(st)))
+    return 2 if st["stale"] else 0
+
+
+def cmd_govern(a) -> int:
+    """PreToolUse hook: print a deny decision when over the line, else print nothing."""
+    out = gv.run(sys.stdin.read(), _now())
+    if out:
+        print(out)
     return 0
 
 
@@ -220,6 +244,13 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("usage", help="real 5h and 7d meters, reset times and pace; exit 2 if stale, 1 if missing")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_usage)
+
+    s = sub.add_parser("line", help="7d usage against the linear weekly line: delta, burn and hours to cross")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_line)
+
+    s = sub.add_parser("govern", help="PreToolUse hook: deny opus or sonnet agents while over the line")
+    s.set_defaults(fn=cmd_govern)
 
     s = sub.add_parser("pace", help="percent-per-hour target and verdict for each window")
     s.add_argument("--json", action="store_true")
