@@ -10,7 +10,9 @@ Tools that print a "percent of your limit" by guessing the quota from local hist
 
 ## Install
 
-    pip install .          # or run in place: python3 -m pacekeeper <cmd>
+    pip install git+https://github.com/decentralizeallengineering/pacekeeper
+
+From a checkout, `pip install .` or run in place: `python3 -m pacekeeper <cmd>`.
 
 Python 3.9 or newer, no dependencies.
 
